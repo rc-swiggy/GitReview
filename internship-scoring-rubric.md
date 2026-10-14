@@ -109,12 +109,57 @@ Note: most submitted code is AI-generated; this is NOT penalized. No red-flag di
 |---|-----------|--------|------------------|
 | 1 | **Clean Code & Conventions** | 25% | Readable naming, consistent formatting, sensible structure, idiomatic patterns. Assessed by reading actual source files. |
 | 2 | **Genuine/Original Work** | 20% | Self-driven projects vs. tutorial-following; unique ideas, custom solutions. |
-| 3 | **Technical Depth** | 20% | Complexity of attempt: real problems, edge cases, appropriate tools/data structures. |
+| 3 | **Technical Depth** | 20% | Project complexity actually handled + edge cases/correctness. Complexity tiers below. |
 | 4 | **Engineering Process & Habits** | 15% | Commit history quality, incremental development vs. one dump, version control sanity. |
 | 5 | **Communication & Documentation** | 10% | README quality, docs, whether a stranger could understand and run the project. |
 | 6 | **Engagement & Consistency** | 10% | Activity over time, recency. Weighted low: students have exam-season gaps. |
 
 Weighting logic: top three (60%) = who they are as a coder today; bottom three (40%) = coachable habits.
+
+## Complexity Lens (inside Technical Depth)
+
+These are intern submissions — judge complexity pragmatically, not like a staff-engineer
+architecture review. Technical Depth = how complex the project actually is **plus**
+edge cases/correctness.
+
+### What counts as a "hard thing"
+
+A hard thing is a problem whose wrong solutions are *invisible until they bite* — the
+project had to think about something that tutorial code never touches. Count a hard
+thing only if the code shows it handled, not just present. Common intern-level examples:
+
+- **State & correctness under change** — races/idempotency handled (locks, atomic transactions, retry-safe writes, conflict detection when data changes mid-flow), cache/state invalidation when sources of truth disagree
+- **Failure & fallback paths** — what happens when an external call fails/times out: retries, fallbacks to a second provider, partial-failure recovery, degraded-but-working behavior
+- **Data integrity & domain invariants** — money/math done right (integer minor units, Decimal, no float drift), uniqueness/constraint enforcement, validation at trust boundaries (user input, file uploads, API params), malformed input survived rather than crashing
+- **Coordination between moving parts** — multiple services/windows/processes that must agree (webhooks ↔ database state, background jobs ↔ foreground UI, multi-step pipelines with ordering constraints)
+- **Non-trivial algorithms or data modeling** — matching/allocation/parsing logic with real rules (reconciliation across periods, schema inference, text extraction), data structures chosen because the naive one doesn't scale
+
+### What does NOT count as a hard thing
+
+- Adding a technology (Kafka, K8s, Redis, microservices) without a problem that needs it
+- File/folder count, LOC, number of endpoints, "clean architecture" folder naming
+- Anything visible only in README/claims — code or it didn't happen
+- Config, scaffolding, boilerplate, CRUD over one table, auth via a single library call
+- Prompt engineering alone (talking to an LLM is one API call; the pipeline *around* it may be a hard thing)
+
+### Tier table
+
+| Tier | Score | What you see in the code |
+|------|-------|--------------------------|
+| Multi-part | 4–5 | 2+ distinct hard things (from the list above, different categories) genuinely working together — all pointable in code |
+| Single-part | 2–3 | One hard thing done properly — or several claimed but only one real |
+| Basic | 1 | CRUD/tutorial-level only; nothing hard attempted, or everything is stubs |
+
+Scoring within Multi-part: 5 means the hard things *interact correctly* (the fallback
+considers the race; the transaction covers the invariant), 4 means each works but
+seams between them show gaps. Scoring within Single-part: 3 means the hard thing
+survives realistic misuse; 2 means it works only on the happy path.
+
+The evidence rule that keeps it honest: **you must name the hard thing you saw in the
+code** (file/function). If you can't point to it, the complexity doesn't count. Stubs
+and README-only claims score at the tier below the claim. Then adjust within the tier
+using edge-case handling and correctness (e.g., real fallbacks and boundary handling
+push a Single-part 3 up toward 4; bugs that break the core path pull it down).
 
 ## Scoring Scale
 
